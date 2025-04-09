@@ -15,8 +15,10 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await dispatch(login(userData));
-    navigate("/dashboard");
+    const isSuccess = await dispatch(login(userData));
+    if (isSuccess) {
+      navigate("/dashboard");
+    }
   };
 
   return (

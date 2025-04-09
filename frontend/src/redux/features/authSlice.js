@@ -24,9 +24,7 @@ const authSlice = createSlice({
             localStorage.removeItem('token');
         },
         registerSuccess: (state, action) => {
-            state.user = action.payload.name;
-            state.token = action.payload.token;
-            localStorage.setItem('token', action.payload.token); 
+            state.user = action.payload.email;
         },
         storeMyProfile : (state, action) => {
             state.user = action.payload;
@@ -52,16 +50,19 @@ export const getMyProfile = () => async (dispatch, getState) => {
 export const register = (userData) => async (dispatch) => {
     try {
         const response = await registerUser(userData); 
-        dispatch(registerSuccess({ 
-            name: response.data.name, 
-            token: response.data.token 
-        }));
+        console.log('Registration response:', response);
+        const { success, message } = response.data;
         Swal.fire({
-            title : 'Registration Successful',
-            text: 'You have registered successfully.',
-            icon : 'success',
+            title : success ?'Registration Successful' : `Registration Failed`,
+            text: success ? 'You have registered successfully.' : message,
+            icon : success ? 'success' : 'error',
             confirmButtonText : 'OK'
         });
+        if (success) {
+            dispatch(registerSuccess({ email: userData.email }));
+            return true;
+        }
+        return false;
     } catch (error) {
         console.error("Registration error:", error);
         alert("Registration failed. Please try again.");
@@ -71,18 +72,22 @@ export const register = (userData) => async (dispatch) => {
 export const login = (userData) => async (dispatch) => {
     try {
         const { data } = await loginUser(userData); 
-
-        dispatch(loginSuccess({
-            user: data.user,
-            token: data.token
-        })); 
+        const { success, user, token, message } = data;
+    
+        // Show SweetAlert
         Swal.fire({
-            title : 'Login Successful',
-            text: 'You have logged in successfully.',
-            icon : 'success',
-            confirmButtonText : 'OK'
+            title: success ? 'Login Successful' : 'Login Failed',
+            text: success ? 'You have logged in successfully.' : message,
+            icon: success ? 'success' : 'error',
+            confirmButtonText: 'OK'
         });
-    } catch (error) {
+        if (success) {
+            dispatch(loginSuccess({ user, token }));
+            return true;
+        }
+        return false;
+    }
+     catch (error) {
         console.error("Login failed:", error.response?.data?.message);
         alert("Login failed. Please check your credentials.");
     }
@@ -98,7 +103,7 @@ export const logout = () => async (dispatch, getState) => {
             dispatch(logoutSuccess());
             localStorage.removeItem('token');
             Swal.fire({
-                title : 'Login Successful',
+                title : 'Logout Successful!',
                 text: 'You have logged out successfully.',
                 icon : 'success',
                 confirmButtonText : 'OK'

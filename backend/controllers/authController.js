@@ -15,12 +15,12 @@ exports.login = async (req, res) => {
             return res.status(400).json({ message: "Email and password are required" });
         }
         if(!user){
-            return res.status(400).json({ message: "Invalid email or password" });
+            return res.status(400).json({ message: "Invalid email or password", success : false });
         }
 
         const isMatchPassword =  await bcrypt.compare(password, user.password);
         if(!isMatchPassword){
-            return res.status(200).json({ message: "Invalid email or password" });
+            return res.status(200).json({ message: "Invalid password", success: false });
         }
         
         const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
@@ -33,7 +33,8 @@ exports.login = async (req, res) => {
                 email: user.email,
                 role : user.role
             },
-            token : token
+            token : token,
+            success: true
         });
 
     } catch (error) {

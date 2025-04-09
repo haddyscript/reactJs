@@ -1,12 +1,12 @@
-import { useState } from 'react';
+import { useState , useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { register } from "../redux/features/authSlice"; // Import the register action
 
 const Register = () => {
     const [userData, setUserData] = useState({ name: "", email: "", password: "" });
     const navigate = useNavigate();
-    const dispatch = useDispatch();  // Initialize dispatch
+    const dispatch = useDispatch();  
 
     const handleChange = (e) => {
         setUserData({ ...userData, [e.target.name]: e.target.value });
@@ -14,8 +14,11 @@ const Register = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        await dispatch(register(userData));  
-        navigate("/login");  
+        const isSuccess = await dispatch(register(userData));  
+        console.log("Registration response:", isSuccess);
+        if (isSuccess) {
+            navigate("/login");
+        }
     };
 
     return (
