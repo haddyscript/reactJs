@@ -1,0 +1,355 @@
+install extension
+Windsurf Plugin (formerly Codeium):
+Github Copilot
+Github Copilot Chat
+Thunder Client
+-------------------------------------------------------------------------------------------------------------------------
+
+npm init -y
+npm install express mysql2 dotenv cors jsonwebtoken bcryptjs body-parser
+npm install --save-dev nodemon
+mkdir routes controllers middleware
+touch server.js db.js .env routes/authRoutes.js routes/userRoutes.js controllers/authController.js controllers/userController.js middleware/authMiddleware.js
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))" - JWT_SECRET .env
+npm install bcrypt
+npm install sweetalert2
+npm install sequelize mysql2
+npm install bcryptjs jsonwebtoken dotenv
+node server.js - run
+npx nodemon server.js - auto-restarting on file changes
+
+
+-------------------------------------------------------------------------------------------------------------------------
+
+
+.env 
+
+PORT=5000
+DB_HOST=localhost
+DB_USER=root
+DB_PASS=  
+DB_NAME=exam_db
+JWT_SECRET=f927efcd44564a3c84c1604c3df896ef831c9b319b5a396931a46811280eee08  
+JWT_EXPIRES_IN=1d
+
+
+-------------------------------------------------------------------------------------------------------------------------
+
+React
+
+npm create vite@latest frontend --template react
+React | then variant Javascript
+cd frontend
+npm install
+npm install redux react-redux @reduxjs/toolkit axios react-router-dom
+npm install react-router-dom@latest
+
+-------------------------------------------------------------------------------------------------------------------------
+
+
+vite.config.js
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  esbuild: {
+    loader: {
+      '.js': 'jsx', 
+    },
+  },
+});
+-------------------------------------------------------------------------------------------------------------------------
+Redux 
+npm install redux-persist
+cd src 
+mkdir redux
+touch redux/store.js
+-------------------------------------------------------------------------------------------------------------------------
+store.js 
+import { configureStore } from '@reduxjs/toolkit';
+import { persistStore, persistReducer } from 'redux-persist';
+import storage from 'redux-persist/lib/storage'; // Local storage
+import authReducer from './features/authSlice';
+
+const persistConfig = {
+  key: 'root',
+  storage,
+};
+
+const persistedReducer = persistReducer(persistConfig, authReducer);
+
+const store = configureStore({
+  reducer: {
+    auth: persistedReducer,
+  },
+});
+
+const persistor = persistStore(store);
+
+export { store, persistor };
+--------------------------------------------------------------------------------------------------------------
+
+cd redux
+mkdir features
+touch features/authSlice.js
+--------------------------------------------------------------------------------------------------------------
+-- authSlice.js --
+import { createSlice } from '@reduxjs/toolkit';
+import { loginUser, registerUser } from "../../api/apiRequest";
+
+
+const initialState = {
+    user : null,
+    token : localStorage.getItem('token') ? localStorage.getItem('token') : null,
+};
+
+const authSlice = createSlice({
+    name : "auth",
+    initialState,
+    reducers: {
+        loginSuccess: (state, action) => {
+            state.user = action.payload.user;
+            state.token = action.payload.token;
+            localStorage.setItem('token', action.payload.token);
+        },
+        logout: (state) => {
+            state.user = null;
+            state.token = null;
+            localStorage.removeItem('token');
+        }
+    }
+});
+
+export const { loginSuccess, logout } = authSlice.actions;
+export default authSlice.reducer;
+
+export const register = (userData) => async (dispatch) => {
+    try {
+        const response = await registerUser(userData);
+        alert("Registration successful! Please login.");
+    }catch (error) {
+        console.error("Registration error:", error);
+        alert("Registration failed. Please try again.");
+    }
+};
+
+export const login = (userData) => async (dispatch) => {
+    try {
+      const { data } = await loginUser(userData);
+      dispatch(loginSuccess(data));
+    } catch (error) {
+      console.error("Login failed:", error.response?.data?.message);
+    }
+};
+
+-------------------------------------------------------------------------------------------------------------------------
+App.jsx
+
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { Provider } from 'react-redux';
+import store from './redux/store';
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <Provider store={store}>
+    <App />
+  </Provider>
+);
+
+-------------------------------------------------------------------------------------------------------------------------
+Create pages
+
+cd src
+mkdir pages
+touch pages/Login.jsx
+touch pages/Register.jsx
+mkdir api
+touch api/apiRequest.js
+-------------------------------------------------------------------------------------------------------------------------
+apiRequest.js
+import axios from "axios";
+
+const API_BASE_URL = "http://localhost:5000/api";
+
+const api = axios.create({
+    baseURL: API_BASE_URL,
+    headers: {
+        "Content-Type": "application/json",
+    },
+});
+
+export const registerUser = async (userData) => {
+    return await api.post("/user/register", userData);
+};
+
+export const loginUser = async (userData) => {
+    return await api.post("/login", userData);
+};
+
+export const getProtectedData = async (token) => {
+    return await api.get("/protected", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+};
+
+export const deleteUser = async (userId, token) => {
+    return await api.delete(`/delete/${userId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+};
+  
+export const getAdminData = async (token) => {
+    return await api.get("/admin", {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+};
+ 
+-------------------------------------------------------------------------------------------------------------------------
+
+
+Register.jsx
+import React, { useState } from "react";
+import { useNavigate, userNavigate } from 'react-router-dom';
+import { register } from "../redux/features/authSlice";
+
+const Register = () => {
+    const [userData, setUserData] = useState({ name: "", email: "", password: "" });
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
+
+    const handleChange = (e) => {
+        setUserData({ ...userData, [e.target.name]: e.target.value });
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        await dispatch(register(userData));
+        navigate("/login");
+    };
+
+    return (
+        <div>
+          <h2>Register</h2>
+          <form onSubmit={handleSubmit}>
+            <input type="text" name="name" placeholder="Name" onChange={handleChange} required />
+            <input type="email" name="email" placeholder="Email" onChange={handleChange} required />
+            <input type="password" name="password" placeholder="Password" onChange={handleChange} required />
+            <button type="submit">Register</button>
+          </form>
+        </div>
+    );
+};
+
+export default Register;
+-------------------------------------------------------------------------------------------------------------------------
+
+touch pages/Dashboard.jsx
+-------------------------------------------------------------------------------------------------------------------------
+Dashboard.jsx
+
+	import React, { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+import { getProtectedData, getAdminData } from "../api/apiRequest";
+
+const Dashboard = () => {
+  const { token, user } = useSelector((state) => state.auth);
+  const [protectedMessage, setProtectedMessage] = useState("");
+  const [adminMessage, setAdminMessage] = useState("");
+
+  useEffect(() => {
+    const fetchProtectedData = async () => {
+      try {
+        const { data } = await getProtectedData(token);
+        setProtectedMessage(data.message);
+      } catch (error) {
+        setProtectedMessage("Access Denied");
+      }
+    };
+
+    const fetchAdminData = async () => {
+      try {
+        const { data } = await getAdminData(token);
+        setAdminMessage(data.message);
+      } catch (error) {
+        setAdminMessage("Admin Access Denied");
+      }
+    };
+
+    fetchProtectedData();
+    if (user.role === "admin") fetchAdminData();
+  }, [token, user.role]);
+
+  return (
+    <div>
+      <h2>Dashboard</h2>
+      <p>{protectedMessage}</p>
+      <p>{adminMessage}</p>
+    </div>
+  );
+};
+
+export default Dashboard;
+-------------------------------------------------------------------------------------------------------------------------
+
+mkdir components
+touch components/ProtectedRoute.js
+
+ProtectedRoute
+import React from 'react';
+import { Redirect, Route } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+
+const ProtectedRoute = ({ component: Component, ...rest }) => {
+  const { token } = useSelector((state) => state.auth); // Get token from Redux state
+
+  return (
+    <Route
+      {...rest}
+      render={(props) =>
+        token ? (
+          <Component {...props} />
+        ) : (
+          <Redirect to="/login" /> // Redirect to login if token is not available
+        )
+      }
+    />
+  );
+};
+
+export default ProtectedRoute;
+-------------------------------------------------------------------------------------------------------------------------
+
+cd src/components
+mkdir Home
+touch Home/Home.jsx
+import React from 'react';
+import './Home.css';
+
+const Home = () => {
+  return (
+    <div>
+      <h1>Welcome to the Home Page!</h1>
+      <p>This is where the home content will go.</p>
+    </div>
+  );
+};
+
+export default Home;
+-------------------------------------------------------------------------------------------------------------------------
+touch Home/Home.css
+
+.home-container {
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .home-container h1 {
+    font-size: 2rem;
+    color: #333;
+  }
+  
+  .home-container p {
+    font-size: 1.2rem;
+    color: #666;
+  }
+ 
+
