@@ -1,6 +1,27 @@
 const bcrypt = require("bcrypt");
 const User = require('../models/User');
 
+exports.getUserData = async (req, res) => {
+    try{
+        const user = req.user;
+        if(!user){
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.status(200).json({
+            message: "User data retrieved successfully",
+            user   : {
+                id: user.id,
+                name: user.name,
+                email: user.email
+            }
+        });
+    }catch(err) {
+        console.error("Error getting user data: ", err);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
 exports.registerUser = async (req, res) => {
     try{
         const { name , email , password } = req.body;

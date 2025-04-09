@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { loginUser, registerUser, logoutUser } from "../../api/apiRequest";
+import { loginUser, registerUser, logoutUser, getMyUserProfile } from "../../api/apiRequest";
 import Swal from 'sweetalert2';
 
 
@@ -28,11 +28,26 @@ const authSlice = createSlice({
             state.token = action.payload.token;
             localStorage.setItem('token', action.payload.token); 
         },
+        storeMyProfile : (state, action) => {
+            state.user = action.payload;
+        }
     }
 });
 
-export const { loginSuccess, logoutSuccess, registerSuccess } = authSlice.actions;
+export const { loginSuccess, logoutSuccess, registerSuccess, storeMyProfile } = authSlice.actions;
 export default authSlice.reducer;
+
+export const getMyProfile = () => async (dispatch, getState) => {
+    try {
+        const { data } = await getMyUserProfile(getState().auth.token);
+        if (data) {
+            dispatch(storeMyProfile(data));
+        }
+        console.log('Profile data:', data);
+    }catch (error) {
+        console.error("Error fetching profile:", error);
+    }
+};
 
 export const register = (userData) => async (dispatch) => {
     try {

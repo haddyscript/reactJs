@@ -41,3 +41,9 @@ export const getAdminData = async (token) => {
         headers: { Authorization: `Bearer ${token}` },
     });
 };
+
+export const getMyUserProfile = async (token) => {
+    return await api.get("/profile", {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}

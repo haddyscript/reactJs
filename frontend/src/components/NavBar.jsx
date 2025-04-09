@@ -26,6 +26,7 @@ const NavBar = () => {
       <h2 className="logo">Hadrian Evarula</h2>
       <ul className="nav-links">
         <li><a href="/">Home</a></li>
+        <li><a href="/dashboard">Dashboard</a></li>
         <li><a href="/profile">Profile</a></li>
 
         {!user ? (

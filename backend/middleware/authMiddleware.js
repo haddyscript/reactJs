@@ -1,9 +1,10 @@
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
+const User = require("../models/User");
 
 dotenv.config();
 
-exports.protect = ( req, res, next ) => {
+exports.protect = async ( req, res, next ) => {
 
     const authHeader = req.headers.authorization;
 
@@ -18,7 +19,14 @@ exports.protect = ( req, res, next ) => {
 
     try{
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded;
+
+        const userData = await User.findByPk(decoded.id);
+         
+        if(!userData){
+            return res.status(401).json({message : "User not found!"});
+        }
+
+        req.user = userData;
         next();
     }catch(err) {
         console.error("Error in authMiddleware: ", err);
