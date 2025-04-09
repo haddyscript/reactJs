@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { loginUser, registerUser, logoutUser, getMyUserProfile } from "../../api/apiRequest";
+import { loginUser, registerUser, logoutUser, getMyUserProfile, updateUser } from "../../api/apiRequest";
 import Swal from 'sweetalert2';
 
 
@@ -27,7 +27,8 @@ const authSlice = createSlice({
             state.user = action.payload.email;
         },
         storeMyProfile : (state, action) => {
-            state.user = action.payload;
+            state.user = action.payload.user;
+            console.log('New Profile data:', state.user);
         }
     }
 });
@@ -38,8 +39,9 @@ export default authSlice.reducer;
 export const getMyProfile = () => async (dispatch, getState) => {
     try {
         const { data } = await getMyUserProfile(getState().auth.token);
+        console.log('Profile data:', data);
         if (data) {
-            dispatch(storeMyProfile(data));
+            dispatch(storeMyProfile({user: data}));
         }
         console.log('Profile data:', data);
     }catch (error) {
@@ -90,6 +92,25 @@ export const login = (userData) => async (dispatch) => {
      catch (error) {
         console.error("Login failed:", error.response?.data?.message);
         alert("Login failed. Please check your credentials.");
+    }
+};
+
+export const updateUserData = (UserData) => async (dispatch, getState) => {
+    try {
+        const { data } = await  updateUser(getState().auth.user.id, UserData, getState().auth.token);
+        if(data.success == true){
+            dispatch(storeMyProfile({user: data.user}));
+        }
+
+        Swal.fire({
+            title : data.success ? 'Update Successful!' : 'Update Failed!',
+            text: data.success ? 'Your profile has been updated successfully.' : data.message,
+            icon : data.success ? 'success' : 'error',
+            confirmButtonText : 'OK'
+        });
+    }catch (error) {
+        console.error("Error updating user data:", error);
+        alert("Failed to update user data. Please try again.");
     }
 };
 

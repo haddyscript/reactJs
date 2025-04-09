@@ -17,6 +17,12 @@ export const loginUser = async (userData) => {
     return await api.post("/user/login", userData);
 };
 
+export const updateUser = async (userId, userData, token) => {
+    return await api.put(`/user/update_user/${userId}`, userData, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
 export const logoutUser = async (token) => {
     return await api.post("/user/logout", {}, {
         headers: { Authorization: `Bearer ${token}` },

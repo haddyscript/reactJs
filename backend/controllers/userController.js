@@ -70,7 +70,11 @@ exports.updateUser = async (req, res) => {
         user.email = email || user.email;
         await user.save();
 
-        res.status(200).json({message: "User updated successfully" , user : user, success: true});
+        res.status(200).json({
+            message: "User updated successfully",
+            user: user,
+            success: true
+        });
 
     }catch(err) {
         console.error("Error updating user: ", err);

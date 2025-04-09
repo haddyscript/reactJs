@@ -12,10 +12,10 @@ exports.login = async (req, res) => {
         const user = await User.findOne({ where: { email } });
 
         if(!email || !password){
-            return res.status(400).json({ message: "Email and password are required" });
+            return res.status(200).json({ message: "Email and password are required" });
         }
         if(!user){
-            return res.status(400).json({ message: "Invalid email or password", success : false });
+            return res.status(200).json({ message: "Invalid email or password", success : false });
         }
 
         const isMatchPassword =  await bcrypt.compare(password, user.password);
